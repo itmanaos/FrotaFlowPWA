@@ -4,7 +4,7 @@ import { useAbastecimento } from '../hooks/useAbastecimento';
 import { 
   fetchVehicles, fetchProfiles, createVehicle, updateVehicle, deleteVehicle,
   createProfile, updateProfile, deleteProfile,
-  fetchGroups, createGroup, updateGroup, deleteGroup, fetchRequestLogs 
+  fetchGroups, createGroup, updateGroup, deleteGroup, fetchRequestLogs, clearAllTransactions 
 } from '../supabase';
 import { UserRole, RequisicaoAbastecimento, Veiculo, Perfil, RequisicaoStatus, Grupo, RequisicaoLog } from '../types';
 import { 
@@ -39,6 +39,8 @@ const WorkflowsDashboard: React.FC<Props> = ({ role, userId }) => {
   const [showVehicleModal, setShowVehicleModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showGroupModal, setShowGroupModal] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [clearing, setClearing] = useState(false);
   
   const [editingVehicle, setEditingVehicle] = useState<Veiculo | null>(null);
   const [editingProfile, setEditingProfile] = useState<Perfil | null>(null);
@@ -279,6 +281,20 @@ const WorkflowsDashboard: React.FC<Props> = ({ role, userId }) => {
     } catch (err) { alert("Existem usuários vinculados a este grupo."); }
   };
 
+  const handleClearData = async () => {
+    setClearing(true);
+    try {
+      await clearAllTransactions();
+      setShowClearConfirm(false);
+      await handleRefresh();
+      alert("Dados transacionais limpos com sucesso!");
+    } catch (err: any) {
+      alert("Erro ao limpar dados: " + err.message);
+    } finally {
+      setClearing(false);
+    }
+  };
+
   // QR Share
   const handleShareQr = async (req: RequisicaoAbastecimento) => {
     const canvas = document.getElementById(`qr-admin-${req.id}`) as HTMLCanvasElement;
@@ -392,6 +408,24 @@ const WorkflowsDashboard: React.FC<Props> = ({ role, userId }) => {
 
       {activeTab === 'management' && role === 'admin' && (
         <div className="space-y-12 animate-in fade-in duration-500">
+          <div className="bg-red-50 p-6 rounded-[2rem] border border-red-100 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center mr-4 text-red-600">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-lg font-black text-red-900">Limpeza de Dados</h4>
+                <p className="text-sm text-red-600 font-medium">Apaga permanentemente todas as requisições, abastecimentos e logs.</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowClearConfirm(true)}
+              className="bg-red-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-700 transition shadow-lg shadow-red-100 active:scale-95"
+            >
+              Limpar Transações
+            </button>
+          </div>
+
           <div className="space-y-4">
              <div className="flex items-center justify-between">
               <h3 className="text-xl font-black text-gray-800 flex items-center">
@@ -628,6 +662,36 @@ const WorkflowsDashboard: React.FC<Props> = ({ role, userId }) => {
             </div>
             <SubmitButton loading={loading} label="Criar Requisição" />
           </form>
+        </Modal>
+      )}
+
+      {showClearConfirm && (
+        <Modal title="Confirmar Limpeza" onClose={() => setShowClearConfirm(false)}>
+          <div className="space-y-6">
+            <div className="p-4 bg-red-50 rounded-2xl border border-red-100">
+              <p className="text-sm text-red-800 font-bold leading-relaxed">
+                Esta ação é <span className="underline">irreversível</span>. Todas as requisições de abastecimento, históricos e logs de auditoria serão removidos permanentemente do banco de dados.
+              </p>
+            </div>
+            <p className="text-xs text-gray-500 font-medium text-center">
+              Os cadastros de veículos, usuários e grupos serão preservados.
+            </p>
+            <div className="flex flex-col space-y-3">
+              <button 
+                onClick={handleClearData}
+                disabled={clearing}
+                className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition disabled:opacity-50"
+              >
+                {clearing ? 'Limpando...' : 'Sim, Limpar Tudo'}
+              </button>
+              <button 
+                onClick={() => setShowClearConfirm(false)}
+                className="w-full py-4 bg-gray-100 text-gray-600 rounded-2xl font-black text-xs uppercase tracking-widest transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
     </div>

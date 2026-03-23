@@ -525,3 +525,37 @@ export const uploadPlatePhoto = async (file: File): Promise<string> => {
 
   return data.publicUrl;
 };
+
+export const clearAllTransactions = async () => {
+  try {
+    // A ordem importa devido às chaves estrangeiras
+    // 1. Logs de requisição
+    const { error: logError } = await supabase
+      .from('requisicao_logs')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000'); // Deleta tudo
+    
+    if (logError) throw logError;
+
+    // 2. Abastecimentos realizados
+    const { error: fuelingError } = await supabase
+      .from('abastecimentos_realizados')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+    
+    if (fuelingError) throw fuelingError;
+
+    // 3. Requisições de abastecimento
+    const { error: reqError } = await supabase
+      .from('requisicoes_abastecimento')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+    
+    if (reqError) throw reqError;
+
+    return { success: true };
+  } catch (err) {
+    console.error("Erro ao limpar dados:", err);
+    throw err;
+  }
+};
