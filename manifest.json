@@ -1,0 +1,18 @@
+
+{
+  "name": "FrotaFlow - Gestão de Frota",
+  "short_name": "FrotaFlow",
+  "description": "Sistema de controle e autorização de abastecimento de frota.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1d4ed8",
+  "theme_color": "#1d4ed8",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3067/3067451.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

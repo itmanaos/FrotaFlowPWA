@@ -1,0 +1,134 @@
+
+-- SCRIPT DE INICIALIZAÇÃO FROTAFLOW
+-- Cole este código no SQL Editor do seu projeto Supabase e clique em RUN.
+
+-- 1. CRIAR TIPOS ENUMERADOS
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+        CREATE TYPE user_role AS ENUM ('gestor', 'secretario', 'motorista', 'frentista', 'admin');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'requisicao_status') THEN
+        CREATE TYPE requisicao_status AS ENUM ('pendente_gestor', 'pendente_secretario', 'autorizado', 'concluido', 'recusado');
+    END IF;
+END $$;
+
+-- 2. CRIAR TABELAS
+CREATE TABLE IF NOT EXISTS perfis (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nome TEXT NOT NULL,
+    cpf TEXT UNIQUE NOT NULL,
+    cargo TEXT,
+    role user_role DEFAULT 'motorista',
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS grupos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nome TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS perfis_grupos (
+    perfil_id UUID REFERENCES perfis(id) ON DELETE CASCADE,
+    grupo_id UUID REFERENCES grupos(id) ON DELETE CASCADE,
+    PRIMARY KEY (perfil_id, grupo_id)
+);
+
+CREATE TABLE IF NOT EXISTS veiculos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    placa TEXT UNIQUE NOT NULL,
+    modelo TEXT NOT NULL,
+    tipo_combustivel TEXT NOT NULL,
+    odometro_atual INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS requisicoes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    motorista_id UUID REFERENCES perfis(id),
+    veiculo_id UUID REFERENCES veiculos(id),
+    quantidade_solicitada NUMERIC NOT NULL,
+    tipo_combustivel TEXT NOT NULL,
+    status requisicao_status DEFAULT 'pendente_gestor',
+    gestor_id UUID REFERENCES perfis(id),
+    secretario_id UUID REFERENCES perfis(id),
+    qr_code_token TEXT,
+    observacoes TEXT,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS abastecimentos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    requisicao_id UUID REFERENCES requisicoes(id) UNIQUE,
+    frentista_id UUID REFERENCES perfis(id),
+    placa_conferida TEXT NOT NULL,
+    foto_placa_url TEXT,
+    odometro_bomba INTEGER NOT NULL,
+    quantidade_final NUMERIC NOT NULL,
+    valor_total NUMERIC DEFAULT 0,
+    tipo_combustivel_atendido TEXT,
+    geolocalizacao JSONB,
+    data_hora TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS requisicao_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    requisicao_id UUID REFERENCES requisicoes(id) ON DELETE CASCADE,
+    perfil_id UUID REFERENCES perfis(id),
+    acao TEXT NOT NULL,
+    status_anterior requisicao_status,
+    status_novo requisicao_status,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 3. HABILITAR REALTIME
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+        CREATE PUBLICATION supabase_realtime;
+    END IF;
+END $$;
+
+ALTER PUBLICATION supabase_realtime ADD TABLE requisicoes;
+ALTER PUBLICATION supabase_realtime ADD TABLE abastecimentos;
+ALTER PUBLICATION supabase_realtime ADD TABLE requisicao_logs;
+
+-- 4. CONFIGURAÇÃO DE STORAGE (STORAGE BUCKETS & POLICIES)
+-- Cria o bucket se não existir
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('fleet-images', 'fleet-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Política para permitir INSERT (Upload) para todos (público/anon)
+-- Como o app usa auth customizado, o cliente Supabase age como 'anon'
+CREATE POLICY "Permitir upload publico em fleet-images"
+ON storage.objects FOR INSERT
+TO public
+WITH CHECK (bucket_id = 'fleet-images');
+
+-- Política para permitir SELECT (Visualização) para todos
+CREATE POLICY "Permitir visualizacao publica em fleet-images"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'fleet-images');
+
+-- 5. SEED DATA (DADOS DE TESTE)
+INSERT INTO veiculos (placa, modelo, tipo_combustivel, odometro_atual)
+VALUES 
+('BRA-2E19', 'MERCEDES AXOR 2544', 'Diesel', 452000),
+('KLS-4421', 'TOYOTA HILUX 4X4', 'Diesel', 120500),
+('FLW-0001', 'VW CONSTELLATION', 'Diesel', 89000)
+ON CONFLICT (placa) DO NOTHING;
+
+INSERT INTO perfis (nome, cpf, cargo, role)
+VALUES 
+('Carlos Motorista', '111', 'Motorista Categoria E', 'motorista'),
+('Ricardo Gestor', '222', 'Gerente de Logística', 'gestor'),
+('Ana Secretaria', '333', 'Analista Administrativo', 'secretario'),
+('José Frentista', '444', 'Operador de Bomba', 'frentista'),
+('Admin Sistema', '000', 'Superuser', 'admin')
+ON CONFLICT (cpf) DO NOTHING;
+
+INSERT INTO grupos (nome) VALUES ('Frota Pesada'), ('Frota Leve'), ('Executivo')
+ON CONFLICT DO NOTHING;
