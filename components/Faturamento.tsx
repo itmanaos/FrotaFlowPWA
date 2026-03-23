@@ -149,7 +149,7 @@ const Faturamento: React.FC<Props> = ({ userId }) => {
                   </div>
                   <div className="space-y-1">
                     <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Valor Total</p>
-                    <p className="text-base font-black text-indigo-600">R$ {f.total_valor.toFixed(2)}</p>
+                    <p className="text-base font-black text-indigo-600">R$ {(f.total_valor || 0).toFixed(2)}</p>
                   </div>
                 </div>
 
@@ -230,7 +230,7 @@ const Faturamento: React.FC<Props> = ({ userId }) => {
                     <div>
                       <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Total a Faturar</p>
                       <h4 className="text-xl font-black text-gray-900">
-                        R$ {pendingRequests.reduce((acc, curr) => acc + Number(curr.valor_total), 0).toFixed(2)}
+                        R$ {pendingRequests.reduce((acc, curr) => acc + Number(curr.valor_total || 0), 0).toFixed(2)}
                       </h4>
                     </div>
                   </div>
@@ -271,7 +271,7 @@ const Faturamento: React.FC<Props> = ({ userId }) => {
                           <td className="px-4 py-2 font-bold text-gray-600">{new Date(p.data_hora).toLocaleDateString()}</td>
                           <td className="px-4 py-2 font-black text-gray-900">{p.placa_conferida}</td>
                           <td className="px-4 py-2 font-bold text-gray-600">{p.requisicao?.motorista?.nome}</td>
-                          <td className="px-4 py-2 font-black text-indigo-600 text-right">R$ {p.valor_total.toFixed(2)}</td>
+                          <td className="px-4 py-2 font-black text-indigo-600 text-right">R$ {(p.valor_total || 0).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -325,7 +325,7 @@ const Faturamento: React.FC<Props> = ({ userId }) => {
                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Valor Faturado</p>
                 <div className="flex items-center space-x-2">
                   <DollarSign className="w-5 h-5 text-green-600" />
-                  <span className="text-lg font-black text-gray-900">R$ {selectedFatura.total_valor.toFixed(2)}</span>
+                  <span className="text-lg font-black text-gray-900">R$ {(selectedFatura.total_valor || 0).toFixed(2)}</span>
                 </div>
               </div>
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">

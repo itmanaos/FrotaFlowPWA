@@ -46,8 +46,8 @@ const Relatorios: React.FC = () => {
       item.requisicao?.veiculo?.modelo || 'N/A',
       item.placa_conferida,
       item.tipo_combustivel_atendido,
-      item.quantidade_final,
-      item.valor_total,
+      (item.quantidade_final || 0).toString(),
+      (item.valor_total || 0).toFixed(2),
       item.frentista?.nome || 'N/A'
     ]);
 
@@ -147,62 +147,61 @@ const Relatorios: React.FC = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            {reportData.map((item, idx) => (
-              <div key={item.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:border-indigo-200 transition group">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition">
-                      <Fuel className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-black text-gray-900">{item.placa_conferida}</span>
-                        <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">{item.tipo_combustivel_atendido}</span>
-                      </div>
-                      <p className="text-xs text-gray-400 font-bold">{item.requisicao?.veiculo?.modelo || 'N/A'}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-8 flex-1">
-                    <div className="space-y-1">
-                      <div className="flex items-center text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                        <User className="w-3 h-3 mr-1" /> Motorista
-                      </div>
-                      <p className="text-xs font-bold text-gray-700">{item.requisicao?.motorista?.nome || 'N/A'}</p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="flex items-center text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                        <MapPin className="w-3 h-3 mr-1" /> Grupo
-                      </div>
-                      <p className="text-xs font-bold text-gray-700">
-                        {item.requisicao?.motorista?.perfis_grupos?.[0]?.grupo?.nome || 'N/A'}
-                      </p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="flex items-center text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                        <Clock className="w-3 h-3 mr-1" /> Data/Hora
-                      </div>
-                      <p className="text-xs font-bold text-gray-700">{new Date(item.data_hora).toLocaleString()}</p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="flex items-center text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                        <ChevronRight className="w-3 h-3 mr-1" /> Volume
-                      </div>
-                      <p className="text-sm font-black text-indigo-600">{item.quantidade_final}L</p>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Valor Total</p>
-                    <p className="text-lg font-black text-gray-900">R$ {item.valor_total.toFixed(2)}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="bg-white rounded-[2rem] border border-gray-100 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="px-6 py-4">Data/Hora</th>
+                    <th className="px-6 py-4">Motorista</th>
+                    <th className="px-6 py-4">Veículo</th>
+                    <th className="px-6 py-4">Grupo</th>
+                    <th className="px-6 py-4">Combustível</th>
+                    <th className="px-6 py-4 text-right">Volume</th>
+                    <th className="px-6 py-4 text-right">Valor Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {reportData.map((item) => (
+                    <tr key={item.id} className="hover:bg-indigo-50/30 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="text-xs font-bold text-gray-800">{new Date(item.data_hora).toLocaleDateString()}</div>
+                        <div className="text-[10px] text-gray-400 font-medium">{new Date(item.data_hora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center">
+                          <User className="w-3.5 h-3.5 text-gray-400 mr-2" />
+                          <span className="text-xs font-bold text-gray-700">{item.requisicao?.motorista?.nome || 'N/A'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-xs font-black text-gray-900">{item.placa_conferida}</div>
+                        <div className="text-[9px] text-gray-400 font-bold uppercase">{item.requisicao?.veiculo?.modelo || 'N/A'}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center">
+                          <MapPin className="w-3 h-3 text-gray-400 mr-1" />
+                          <span className="text-xs font-bold text-gray-700">
+                            {item.requisicao?.motorista?.perfis_grupos?.[0]?.grupo?.nome || 'N/A'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">
+                          {item.tipo_combustivel_atendido}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className="text-xs font-black text-indigo-600">{item.quantidade_final}L</span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className="text-sm font-black text-gray-900">R$ {(item.valor_total || 0).toFixed(2)}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       ) : (

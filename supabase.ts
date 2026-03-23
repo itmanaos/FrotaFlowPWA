@@ -180,7 +180,7 @@ export const fetchRequestsPaginated = async (
         motorista:motorista_id(*)
       `, { count: 'exact' });
 
-    if (filters?.status && filters.status.length > 0) {
+    if (filters?.status && Array.isArray(filters.status) && filters.status.length > 0) {
       query = query.in('status', filters.status);
     } else {
       query = query.neq('status', 'faturada');
@@ -221,7 +221,7 @@ export const fetchRequestsPaginated = async (
         .from('requisicoes_abastecimento')
         .select('*', { count: 'exact' });
       
-      if (filters?.status && filters.status.length > 0) {
+      if (filters?.status && Array.isArray(filters.status) && filters.status.length > 0) {
         simpleQuery = simpleQuery.in('status', filters.status);
       } else {
         simpleQuery = simpleQuery.neq('status', 'faturada');

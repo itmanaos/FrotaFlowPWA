@@ -113,7 +113,8 @@ const HistoricoAbastecimentos: React.FC<Props> = ({ role }) => {
       autorizado: [],
       pendente_gestor: [],
       pendente_secretario: [],
-      recusado: []
+      recusado: [],
+      faturada: []
     };
     pagedRequests.forEach(req => {
       if (groups[req.status]) groups[req.status].push(req);
@@ -131,7 +132,7 @@ const HistoricoAbastecimentos: React.FC<Props> = ({ role }) => {
     if (page > 0) loadRequests(false);
   }, [page]);
 
-  const hasMore = pagedRequests.length < totalCount;
+  const hasMore = (pagedRequests?.length || 0) < totalCount;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -219,7 +220,7 @@ const HistoricoAbastecimentos: React.FC<Props> = ({ role }) => {
       ) : (
         <div className="space-y-4">
           {Object.entries(STATUS_GROUP_CONFIG).map(([status, config]) => {
-            const items = groupedData[status];
+            const items = groupedData[status] || [];
             if (items.length === 0) return null;
 
             const isExpanded = expandedGroups[status];
