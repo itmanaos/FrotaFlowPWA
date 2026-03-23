@@ -111,9 +111,9 @@ export const seedDatabase = async () => {
     const { error: vError } = await supabase
       .from('veiculos')
       .upsert([
-        { placa: 'ABC-1234', modelo: 'Volvo FH 540', tipo_combustivel: 'Diesel', odometro_atual: 150000, proprietario: 'Secretaria de Obras' },
-        { placa: 'XYZ-9876', modelo: 'Scania R450', tipo_combustivel: 'Diesel', odometro_atual: 85000, proprietario: 'Secretaria de Obras' },
-        { placa: 'KGB-0007', modelo: 'Toyota Hilux', tipo_combustivel: 'Diesel', odometro_atual: 12000, proprietario: 'Gabinete' }
+        { placa: 'ABC-1234', modelo: 'Volvo FH 540', tipo_veiculo: 'caminhão', tipo_combustivel: 'Diesel', odometro_atual: 150000, proprietario: 'Secretaria de Obras' },
+        { placa: 'XYZ-9876', modelo: 'Scania R450', tipo_veiculo: 'caminhão', tipo_combustivel: 'Diesel', odometro_atual: 85000, proprietario: 'Secretaria de Obras' },
+        { placa: 'KGB-0007', modelo: 'Toyota Hilux', tipo_veiculo: 'carro', tipo_combustivel: 'Diesel', odometro_atual: 12000, proprietario: 'Gabinete' }
       ]);
 
     if (vError) throw vError;

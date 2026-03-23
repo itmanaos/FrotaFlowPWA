@@ -1,5 +1,6 @@
 
 export type UserRole = 'gestor' | 'secretario' | 'motorista' | 'frentista' | 'admin';
+export type VeiculoTipo = 'carro' | 'moto' | 'lancha' | 'caminhão' | 'avulso';
 
 export interface Grupo {
   id: string;
@@ -21,6 +22,7 @@ export interface Veiculo {
   id: string;
   placa: string;
   modelo: string;
+  tipo_veiculo: VeiculoTipo;
   tipo_combustivel: string;
   odometro_atual: number;
   proprietario?: string;

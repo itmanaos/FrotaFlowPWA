@@ -18,6 +18,13 @@ EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
+-- Enum para Tipos de Veículo
+DO $$ BEGIN
+    CREATE TYPE veiculo_tipo AS ENUM ('carro', 'moto', 'lancha', 'caminhão', 'avulso');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 -- 2. Tabelas Principais
 
 -- Tabela de Grupos
@@ -50,6 +57,7 @@ CREATE TABLE IF NOT EXISTS veiculos (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     placa TEXT NOT NULL UNIQUE,
     modelo TEXT NOT NULL,
+    tipo_veiculo veiculo_tipo NOT NULL DEFAULT 'carro',
     tipo_combustivel TEXT NOT NULL,
     odometro_atual INTEGER DEFAULT 0,
     proprietario TEXT, -- Nova coluna para identificação de secretaria/entidade
@@ -182,8 +190,8 @@ INSERT INTO perfis (nome, cpf, role, cargo, senha) VALUES
 ('Administrador', '555', 'admin', 'Super Usuário', '123')
 ON CONFLICT (cpf) DO NOTHING;
 
-INSERT INTO veiculos (placa, modelo, tipo_combustivel, odometro_atual, proprietario) VALUES 
-('ABC-1234', 'Volvo FH 540', 'Diesel', 150000, 'Secretaria de Obras'),
-('XYZ-9876', 'Scania R450', 'Diesel', 85000, 'Secretaria de Obras'),
-('KGB-0007', 'Toyota Hilux', 'Diesel', 12000, 'Gabinete')
+INSERT INTO veiculos (placa, modelo, tipo_veiculo, tipo_combustivel, odometro_atual, proprietario) VALUES 
+('ABC-1234', 'Volvo FH 540', 'caminhão', 'Diesel', 150000, 'Secretaria de Obras'),
+('XYZ-9876', 'Scania R450', 'caminhão', 'Diesel', 85000, 'Secretaria de Obras'),
+('KGB-0007', 'Toyota Hilux', 'carro', 'Diesel', 12000, 'Gabinete')
 ON CONFLICT (placa) DO NOTHING;

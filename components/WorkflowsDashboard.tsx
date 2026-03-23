@@ -6,7 +6,7 @@ import {
   createProfile, updateProfile, deleteProfile,
   fetchGroups, createGroup, updateGroup, deleteGroup, fetchRequestLogs, clearAllTransactions 
 } from '../supabase';
-import { UserRole, RequisicaoAbastecimento, Veiculo, Perfil, RequisicaoStatus, Grupo, RequisicaoLog } from '../types';
+import { UserRole, RequisicaoAbastecimento, Veiculo, Perfil, RequisicaoStatus, Grupo, RequisicaoLog, VeiculoTipo } from '../types';
 import { 
   Check, ShieldCheck, UserCheck, AlertCircle, List, 
   History, BarChart3, Settings, Plus, X, Truck, User, Fuel, Ban,
@@ -66,6 +66,7 @@ const WorkflowsDashboard: React.FC<Props> = ({ role, userId }) => {
   const [vehicleForm, setVehicleForm] = useState({
     placa: '',
     modelo: '',
+    tipo_veiculo: 'carro' as VeiculoTipo,
     tipo_combustivel: 'Diesel',
     odometro_atual: 0,
     proprietario: ''
@@ -172,7 +173,7 @@ const WorkflowsDashboard: React.FC<Props> = ({ role, userId }) => {
       }
       setShowVehicleModal(false);
       setEditingVehicle(null);
-      setVehicleForm({ placa: '', modelo: '', tipo_combustivel: 'Diesel', odometro_atual: 0, proprietario: '' });
+      setVehicleForm({ placa: '', modelo: '', tipo_veiculo: 'carro', tipo_combustivel: 'Diesel', odometro_atual: 0, proprietario: '' });
       loadData();
     } catch (err: any) {
       // Captura erro de Unique Constraint do Postgres (Código 23505)
@@ -197,6 +198,7 @@ const WorkflowsDashboard: React.FC<Props> = ({ role, userId }) => {
     setVehicleForm({
       placa: v.placa,
       modelo: v.modelo,
+      tipo_veiculo: v.tipo_veiculo,
       tipo_combustivel: v.tipo_combustivel,
       odometro_atual: v.odometro_atual,
       proprietario: v.proprietario || ''
@@ -462,7 +464,7 @@ const WorkflowsDashboard: React.FC<Props> = ({ role, userId }) => {
                 <h3 className="text-xl font-black text-gray-800 flex items-center">
                   <CarFront className="w-6 h-6 mr-2 text-blue-600" /> Frota de Veículos
                 </h3>
-                <button onClick={() => { setEditingVehicle(null); setVehicleForm({placa:'', modelo:'', tipo_combustivel:'Diesel', odometro_atual:0, proprietario: ''}); setVehicleError(''); setShowVehicleModal(true); }} className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition shadow-sm">
+                <button onClick={() => { setEditingVehicle(null); setVehicleForm({placa:'', modelo:'', tipo_veiculo:'carro', tipo_combustivel:'Diesel', odometro_atual:0, proprietario: ''}); setVehicleError(''); setShowVehicleModal(true); }} className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition shadow-sm">
                   <Plus className="w-5 h-5" />
                 </button>
               </div>
@@ -480,7 +482,7 @@ const WorkflowsDashboard: React.FC<Props> = ({ role, userId }) => {
                       <tr key={v.id} className="hover:bg-gray-50/50 transition">
                         <td className="px-6 py-4">
                           <div className="font-bold text-gray-900">{v.placa}</div>
-                          <div className="text-xs text-gray-400">{v.modelo}</div>
+                          <div className="text-xs text-gray-400">{v.modelo} <span className="ml-1 px-1.5 py-0.5 bg-gray-100 text-[9px] rounded uppercase font-black">{v.tipo_veiculo}</span></div>
                           {v.proprietario && <div className="text-[10px] text-indigo-500 font-bold uppercase mt-1">{v.proprietario}</div>}
                         </td>
                         <td className="px-6 py-4 font-mono font-bold text-blue-600">{v.odometro_atual.toLocaleString()} km</td>
@@ -590,7 +592,21 @@ const WorkflowsDashboard: React.FC<Props> = ({ role, userId }) => {
               required
             />
             <InputField label="Modelo" value={vehicleForm.modelo} onChange={v => setVehicleForm({...vehicleForm, modelo: v})} placeholder="Modelo" required />
-            <InputField label="Proprietário" value={vehicleForm.proprietario} onChange={v => setVehicleForm({...vehicleForm, proprietario: v})} placeholder="Ex: Secretaria de Saúde" />
+            <div className="grid grid-cols-2 gap-4">
+               <SelectField 
+                 label="Tipo de Veículo" 
+                 value={vehicleForm.tipo_veiculo} 
+                 onChange={v => setVehicleForm({...vehicleForm, tipo_veiculo: v as VeiculoTipo})} 
+                 options={[
+                   {value:'carro', label:'Carro'}, 
+                   {value:'moto', label:'Moto'}, 
+                   {value:'lancha', label:'Lancha'}, 
+                   {value:'caminhão', label:'Caminhão'}, 
+                   {value:'avulso', label:'Avulso'}
+                 ]} 
+               />
+               <InputField label="Proprietário" value={vehicleForm.proprietario} onChange={v => setVehicleForm({...vehicleForm, proprietario: v})} placeholder="Ex: Secretaria de Saúde" />
+            </div>
             <div className="grid grid-cols-2 gap-4">
                <SelectField label="Combustível" value={vehicleForm.tipo_combustivel} onChange={v => setVehicleForm({...vehicleForm, tipo_combustivel: v})} options={[{value:'Diesel', label:'Diesel'}, {value:'Gasolina', label:'Gasolina'}, {value:'Etanol', label:'Etanol'}]} />
                <InputField label="Odômetro" value={vehicleForm.odometro_atual.toString()} onChange={v => setVehicleForm({...vehicleForm, odometro_atual: Number(v)})} type="number" placeholder="0" required />
