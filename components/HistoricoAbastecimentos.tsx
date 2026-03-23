@@ -22,6 +22,7 @@ const STATUS_GROUP_CONFIG: Record<RequisicaoStatus, { label: string, color: stri
   pendente_gestor: { label: 'Pendente Gestor', color: 'text-yellow-600', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-100', icon: Clock },
   pendente_secretario: { label: 'Pendente Secretaria', color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-100', icon: Clock },
   recusado: { label: 'Recusados', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-100', icon: Ban },
+  faturada: { label: 'Faturados', color: 'text-gray-600', bgColor: 'bg-gray-50', borderColor: 'border-gray-100', icon: FileText },
 };
 
 const HistoricoAbastecimentos: React.FC<Props> = ({ role }) => {

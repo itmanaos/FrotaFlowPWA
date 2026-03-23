@@ -1,17 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAbastecimento } from '../hooks/useAbastecimento';
-import { 
-  fetchVehicles, fetchProfiles, createVehicle, updateVehicle, deleteVehicle,
+import { fetchVehicles, fetchProfiles, createVehicle, updateVehicle, deleteVehicle,
   createProfile, updateProfile, deleteProfile,
-  fetchGroups, createGroup, updateGroup, deleteGroup, fetchRequestLogs, clearAllTransactions 
+  fetchGroups, createGroup, updateGroup, deleteGroup, fetchRequestLogs, clearAllTransactions, fetchFuelingReport,
+  fetchFaturas, fetchPendingBillingRequests, createFatura, fetchFaturaDetails
 } from '../supabase';
+import Relatorios from './Relatorios';
+import Faturamento from './Faturamento';
 import { UserRole, RequisicaoAbastecimento, Veiculo, Perfil, RequisicaoStatus, Grupo, RequisicaoLog, VeiculoTipo } from '../types';
 import { 
   Check, ShieldCheck, UserCheck, AlertCircle, List, 
   History, BarChart3, Settings, Plus, X, Truck, User, Fuel, Ban,
   CarFront, Users, BadgeCheck, Pencil, Trash2, Shield, Activity, Clock, CheckCircle2, QrCode as QrIcon,
-  AlertTriangle, ChevronRight, Tags, FolderPlus, MessageSquare, Eye, Share2, MapPin, ExternalLink, Info, Droplets, Loader2, DollarSign, RotateCw
+  AlertTriangle, ChevronRight, Tags, FolderPlus, MessageSquare, Eye, Share2, MapPin, ExternalLink, Info, Droplets, Loader2, DollarSign, RotateCw, FileText, Receipt
 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import HistoricoAbastecimentos from './HistoricoAbastecimentos';
@@ -26,7 +28,7 @@ const WorkflowsDashboard: React.FC<Props> = ({ role, userId }) => {
   const { requests, completedFuelings, approveGestor, approveSecretario, rejectRequest, createRequest, refreshData, loading, error, setError } = useAbastecimento(role, userId);
   
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'pending' | 'history' | 'dashboard' | 'management'>(
+  const [activeTab, setActiveTab] = useState<'pending' | 'history' | 'dashboard' | 'management' | 'reports' | 'billing'>(
     role === 'admin' ? 'pending' : 'dashboard'
   );
   
@@ -327,6 +329,12 @@ const WorkflowsDashboard: React.FC<Props> = ({ role, userId }) => {
           <TabButton active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={<BarChart3 className="w-4 h-4" />} label="Dashboard" />
           <TabButton active={activeTab === 'pending'} onClick={() => setActiveTab('pending')} icon={<List className="w-4 h-4" />} label={role === 'admin' ? "Monitoramento" : "Pendentes"} />
           <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History className="w-4 h-4" />} label="Histórico" />
+          {['admin', 'secretario'].includes(role) && (
+            <TabButton active={activeTab === 'reports'} onClick={() => setActiveTab('reports')} icon={<FileText className="w-4 h-4" />} label="Relatórios" />
+          )}
+          {['admin', 'secretario'].includes(role) && (
+            <TabButton active={activeTab === 'billing'} onClick={() => setActiveTab('billing')} icon={<Receipt className="w-4 h-4" />} label="Faturamento" />
+          )}
           {role === 'admin' && (
             <TabButton active={activeTab === 'management'} onClick={() => setActiveTab('management')} icon={<Shield className="w-4 h-4" />} label="Gestão" />
           )}
@@ -348,6 +356,14 @@ const WorkflowsDashboard: React.FC<Props> = ({ role, userId }) => {
       </div>
 
       {activeTab === 'dashboard' && <Dashboard />}
+
+      {activeTab === 'reports' && ['admin', 'secretario'].includes(role) && (
+        <Relatorios />
+      )}
+
+      {activeTab === 'billing' && ['admin', 'secretario'].includes(role) && (
+        <Faturamento userId={userId} />
+      )}
 
       {activeTab === 'pending' && (
         <div className="space-y-8">

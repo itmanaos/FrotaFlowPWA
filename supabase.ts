@@ -1,6 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { RequisicaoAbastecimento, Veiculo, Perfil, AbastecimentoRealizado, RequisicaoLog, Grupo, RequisicaoStatus } from './types';
+import { RequisicaoAbastecimento, Veiculo, Perfil, AbastecimentoRealizado, RequisicaoLog, Grupo, RequisicaoStatus, Fatura } from './types';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://swxiffwdoynektwkmdcm.supabase.co';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_PhLommsswSMLOgaHDqGFNw_zgQQ9A2N';
@@ -140,6 +140,7 @@ export const fetchRequests = async (): Promise<RequisicaoAbastecimento[]> => {
         veiculo:veiculo_id (*),
         motorista:motorista_id (*)
       `)
+      .neq('status', 'faturada')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -181,6 +182,8 @@ export const fetchRequestsPaginated = async (
 
     if (filters?.status && filters.status.length > 0) {
       query = query.in('status', filters.status);
+    } else {
+      query = query.neq('status', 'faturada');
     }
 
     if (filters?.placa) {
@@ -220,6 +223,8 @@ export const fetchRequestsPaginated = async (
       
       if (filters?.status && filters.status.length > 0) {
         simpleQuery = simpleQuery.in('status', filters.status);
+      } else {
+        simpleQuery = simpleQuery.neq('status', 'faturada');
       }
       if (filters?.motorista_id) {
         simpleQuery = simpleQuery.eq('motorista_id', filters.motorista_id);
@@ -553,9 +558,141 @@ export const clearAllTransactions = async () => {
     
     if (reqError) throw reqError;
 
+    // 4. Faturas
+    const { error: faturaError } = await supabase
+      .from('faturas')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+    
+    if (faturaError) throw faturaError;
+
     return { success: true };
   } catch (err) {
     console.error("Erro ao limpar dados:", err);
     throw err;
   }
+};
+
+export const fetchFuelingReport = async (startDate: string, endDate: string, grupoId?: string) => {
+  try {
+    // Busca todos os abastecimentos no período
+    let query = supabase
+      .from('abastecimentos_realizados')
+      .select(`
+        *,
+        frentista:frentista_id (nome),
+        requisicao:requisicao_id (
+          *,
+          veiculo:veiculo_id (*),
+          motorista:motorista_id (
+            *,
+            perfis_grupos (
+              grupo:grupo_id (*)
+            )
+          )
+        )
+      `)
+      .gte('data_hora', startDate)
+      .lte('data_hora', endDate)
+      .order('data_hora', { ascending: false });
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    // Se um grupo foi selecionado, filtra os resultados
+    if (grupoId && data) {
+      return data.filter(item => {
+        const motorista = (item.requisicao as any)?.motorista;
+        const grupos = motorista?.perfis_grupos || [];
+        return grupos.some((pg: any) => pg.grupo?.id === grupoId);
+      });
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error("Erro ao buscar relatório de abastecimentos:", err);
+    throw err;
+  }
+};
+
+export const fetchFaturas = async (): Promise<Fatura[]> => {
+  const { data, error } = await supabase
+    .from('faturas')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+};
+
+export const fetchPendingBillingRequests = async (startDate: string, endDate: string) => {
+  const { data, error } = await supabase
+    .from('abastecimentos_realizados')
+    .select(`
+      *,
+      requisicao:requisicao_id (
+        *,
+        veiculo:veiculo_id (*),
+        motorista:motorista_id (*)
+      )
+    `)
+    .gte('data_hora', startDate)
+    .lte('data_hora', endDate);
+
+  if (error) throw error;
+  
+  // Filtro manual para garantir status e ausência de fatura
+  return (data || []).filter(item => {
+    const req = item.requisicao as any;
+    return req && req.status === 'concluido' && !req.fatura_id;
+  });
+};
+
+export const createFatura = async (fatura: Omit<Fatura, 'id' | 'created_at'>, requisicaoIds: string[]) => {
+  // 1. Criar a fatura
+  const { data: newFatura, error: faturaError } = await supabase
+    .from('faturas')
+    .insert([fatura])
+    .select()
+    .single();
+
+  if (faturaError) throw faturaError;
+
+  // 2. Atualizar as requisições
+  const { error: updateError } = await supabase
+    .from('requisicoes_abastecimento')
+    .update({ 
+      status: 'faturada',
+      fatura_id: newFatura.id 
+    })
+    .in('id', requisicaoIds);
+
+  if (updateError) throw updateError;
+
+  return newFatura;
+};
+
+export const fetchFaturaDetails = async (faturaId: string) => {
+  const { data: fatura, error: faturaError } = await supabase
+    .from('faturas')
+    .select('*')
+    .eq('id', faturaId)
+    .single();
+
+  if (faturaError) throw faturaError;
+
+  const { data: requisicoes, error: reqError } = await supabase
+    .from('requisicoes_abastecimento')
+    .select(`
+      *,
+      veiculo:veiculo_id (*),
+      motorista:motorista_id (*),
+      abastecimento:abastecimentos_realizados (*)
+    `)
+    .eq('fatura_id', faturaId);
+
+  if (reqError) throw reqError;
+
+  return { ...fatura, requisicoes };
 };

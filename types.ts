@@ -28,7 +28,7 @@ export interface Veiculo {
   proprietario?: string;
 }
 
-export type RequisicaoStatus = 'pendente_gestor' | 'pendente_secretario' | 'autorizado' | 'concluido' | 'recusado';
+export type RequisicaoStatus = 'pendente_gestor' | 'pendente_secretario' | 'autorizado' | 'concluido' | 'recusado' | 'faturada';
 
 export interface RequisicaoAbastecimento {
   id: string;
@@ -70,4 +70,18 @@ export interface AbastecimentoRealizado {
   tipo_combustivel_atendido: string;
   geolocalizacao: { lat: number; lng: number };
   data_hora: string;
+}
+
+export interface Fatura {
+  id: string;
+  numero_fatura: string;
+  data_inicio: string;
+  data_fim: string;
+  total_litros: number;
+  total_valor: number;
+  status: 'aberta' | 'fechada';
+  created_by: string;
+  created_at: string;
+  // Joined fields
+  requisicoes?: RequisicaoAbastecimento[];
 }

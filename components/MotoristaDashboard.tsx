@@ -6,7 +6,7 @@ import { fetchVehicles } from '../supabase';
 import { 
   PlusCircle, Clock, CheckCircle2, QrCode as QrIcon, 
   Share2, X, Truck, Fuel, Ban, UserCircle, 
-  Search, ShieldAlert, ListChecks, History, Calendar, ArrowRight, AlertTriangle, MessageSquare
+  Search, ShieldAlert, ListChecks, History, Calendar, ArrowRight, AlertTriangle, MessageSquare, FileText
 } from 'lucide-react';
 import { RequisicaoAbastecimento, Veiculo, Perfil, RequisicaoStatus } from '../types';
 
@@ -441,6 +441,7 @@ const StatusBadge: React.FC<{ status: RequisicaoStatus, compact?: boolean }> = (
     autorizado: { label: 'AUTORIZADO', color: 'bg-blue-50 text-blue-700 border-blue-100', icon: QrIcon },
     concluido: { label: 'CONCLUÍDO', color: 'bg-green-50 text-green-700 border-green-100', icon: CheckCircle2 },
     recusado: { label: 'REPROVADA', color: 'bg-red-50 text-red-700 border-red-100', icon: Ban },
+    faturada: { label: 'FATURADA', color: 'bg-gray-50 text-gray-700 border-gray-100', icon: FileText },
   };
 
   const config = configs[status];

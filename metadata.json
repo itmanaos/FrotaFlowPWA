@@ -1,6 +1,6 @@
 {
-  "name": "FrotaFlowV1.0 - Controle de Frota PWA",
-  "description": "Sistema completo para gestão de abastecimento de frota, incluindo workflow de aprovação e validação por QR Code.",
+  "name": "FrotaFlowV1.1 - Controle de Frota PWA",
+  "description": "Sistema completo para gestão de abastecimento de frota, incluindo workflow de aprovação e validação por QR Code. Incluido Módulos de Relatórios e Faturamento.",
   "requestFramePermissions": [
     "camera",
     "geolocation"
